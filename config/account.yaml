@@ -1,0 +1,60 @@
+- {
+    filePath: /home/xzjianyu/goproject/src/github.com/hyperspeednetwork/hsnhub_test/hsn1,
+    name: hsn1,
+    password: "12345678",
+    type: local,
+  }
+- {
+    filePath: /home/xzjianyu/goproject/src/github.com/hyperspeednetwork/hsnhub_test/hsn2,
+    name: hsn2,
+    password: "12345678",
+    type: local,
+  }
+- {
+    filePath: /home/xzjianyu/goproject/src/github.com/hyperspeednetwork/hsnhub_test/hsn3,
+    name: hsn3,
+    password: "12345678",
+    type: local,
+  }
+- {
+    filePath: /home/xzjianyu/goproject/src/github.com/hyperspeednetwork/hsnhub_test/hsn4,
+    name: hsn4,
+    password: "12345678",
+    type: local,
+  }
+- {
+    filePath: /home/xzjianyu/goproject/src/github.com/hyperspeednetwork/hsnhub_test/hsn5,
+    name: hsn5,
+    password: "12345678",
+    type: local,
+  }
+- {
+    filePath: /home/xzjianyu/goproject/src/github.com/hyperspeednetwork/hsnhub_test/hsn6,
+    name: hsn6,
+    password: "12345678",
+    type: local,
+  }
+- {
+    filePath: /home/xzjianyu/goproject/src/github.com/hyperspeednetwork/hsnhub_test/hsn7,
+    name: hsn7,
+    password: "12345678",
+    type: local,
+  }
+- {
+    filePath: /home/xzjianyu/goproject/src/github.com/hyperspeednetwork/hsnhub_test/hsn8,
+    name: hsn8,
+    password: "12345678",
+    type: local,
+  }
+- {
+    filePath: /home/xzjianyu/goproject/src/github.com/hyperspeednetwork/hsnhub_test/hsn9,
+    name: hsn9,
+    password: "12345678",
+    type: local,
+  }
+- {
+    filePath: /home/xzjianyu/goproject/src/github.com/hyperspeednetwork/hsnhub_test/hsn10,
+    name: hsn10,
+    password: "12345678",
+    type: local,
+  }

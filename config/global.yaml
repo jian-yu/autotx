@@ -1,0 +1,5 @@
+hsn_client_path: /home/xzjianyu/goproject/src/github.com/hyperspeednetwork/hsnhub_test/build/hsncli
+hsn_server_path: /home/xzjianyu/goproject/src/github.com/hyperspeednetwork/hsnhub_test/build/hsnd
+hsn_local_account_path: /home/xzjianyu/goproject/src/github.com/hyperspeednetwork/hsnhub_test
+chain_id: hsn
+hsn_unsign_dir: /home/xzjianyu/pyproject/hsnhub_tx/unsign_json
