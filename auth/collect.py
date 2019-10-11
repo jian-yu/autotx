@@ -4,11 +4,10 @@ import pexpect
 import urllib3
 import yaml
 
-from hsnhub_tx import (HSN_CLIENT_PATH, HSN_LOCAL_ACCOUNT_PATH,
-                       PROJECT_CONFIG_DIR)
-from hsnhub_tx.auth.account import Account
-from hsnhub_tx.auth.validator import Validator
-from hsnhub_tx.utils.contants import HTTP_METHOD_GET
+from autotx import (HSN_CLIENT_PATH, HSN_LOCAL_ACCOUNT_PATH, PROJECT_CONFIG_DIR)
+from autotx.auth.account import Account
+from autotx.auth.validator import Validator
+from autotx.utils.contants import HTTP_METHOD_GET
 
 ACCOUNT_CONFIG_PATH = PROJECT_CONFIG_DIR + '/account.yaml'
 authAccountUrl = 'http://172.38.8.89:1317/auth/accounts/%s'

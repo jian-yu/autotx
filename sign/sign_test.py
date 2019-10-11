@@ -1,9 +1,9 @@
 import unittest
-from hsnhub_tx.auth.account import Account
-from hsnhub_tx.module.sn import SNGenerator
-from hsnhub_tx.module.mid import GenerateMID
-from hsnhub_tx.sign.sign import Signer
-from hsnhub_tx.module.moduletype import TYPE_SIGN
+from autotx.auth.account import Account
+from autotx.module.sn import SNGenerator
+from autotx.module.mid import GenerateMID
+from autotx.sign.sign import Signer
+from autotx.module.moduletype import TYPE_SIGN
 
 
 class TestSigner(unittest.TestCase):

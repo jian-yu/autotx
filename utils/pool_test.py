@@ -1,4 +1,4 @@
-from hsnhub_tx.utils.pool import Pool
+from autotx.utils.pool import Pool
 import unittest
 
 

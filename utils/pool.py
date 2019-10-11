@@ -1,6 +1,6 @@
 from queue import Queue, Empty
-from hsnhub_tx.utils.buffer import Buffer
-from hsnhub_tx.utils.rwlock import RWLock
+from autotx.utils.buffer import Buffer
+from autotx.utils.rwlock import RWLock
 
 
 class Pool:

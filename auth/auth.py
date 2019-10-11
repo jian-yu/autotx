@@ -1,11 +1,11 @@
-from hsnhub_tx.module.module import Module
-from hsnhub_tx.utils.rwlock import RWLock
-from hsnhub_tx.auth.account import Account
+from autotx.module.module import Module
+from autotx.utils.rwlock import RWLock
+from autotx.auth.account import Account
 import urllib3
-from hsnhub_tx.utils.contants import HTTP_METHOD_GET
+from autotx.utils.contants import HTTP_METHOD_GET
 import json
-from hsnhub_tx.error.errors import AccountNotFoundError, AccountParseError, UnknownError
-from hsnhub_tx import PROJECT_DIR
+from autotx.error.errors import AccountNotFoundError, AccountParseError, UnknownError
+from autotx import PROJECT_DIR
 
 http = urllib3.PoolManager()
 authAccountUrl = 'http://172.38.8.89:1317/auth/accounts/{accountAddr}'

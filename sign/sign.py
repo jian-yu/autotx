@@ -1,8 +1,8 @@
-from hsnhub_tx.sign.base import Sign
-from hsnhub_tx.module.module import Module
+from autotx.sign.base import Sign
+from autotx.module.module import Module
 import pexpect
-from hsnhub_tx import HSN_CLIENT_PATH, HSN_LOCAL_ACCOUNT_PATH
-from hsnhub_tx.utils.timestamp import now_timestamp
+from autotx import HSN_CLIENT_PATH, HSN_LOCAL_ACCOUNT_PATH
+from autotx.utils.timestamp import now_timestamp
 
 ERROR_INVALID_ACCOUNT_PASSWORD = 'ERROR: invalid account password'
 ERROR_ACCOUNT_PASSWORD_INSUFFICIENT_CHARACTERS = 'ERROR: Error reading passphrase: password must be at least 8 characters'

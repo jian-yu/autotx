@@ -1,7 +1,7 @@
 # status 调度器状态以及检查调度器状态的相关操作
-from hsnhub_tx.utils.rwlock import RWLock
-from hsnhub_tx.log.logger import Logger
-from hsnhub_tx.utils.contants import LOG_TIME_FOEMAT
+from autotx.utils.rwlock import RWLock
+from autotx.log.logger import Logger
+from autotx.utils.contants import LOG_TIME_FOEMAT
 import time
 
 SCHED_STATUS_UNINITIALIZED = 0

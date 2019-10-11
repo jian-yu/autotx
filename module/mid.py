@@ -1,5 +1,5 @@
-from hsnhub_tx.error.errors import IllegalError
-from hsnhub_tx.module.moduletype import LegalLetterType, LegalTypeLetter, LegalType
+from autotx.error.errors import IllegalError
+from autotx.module.moduletype import LegalLetterType, LegalTypeLetter, LegalType
 midTemplate = '{mType}|{sn}'
 
 

@@ -3,13 +3,13 @@ import time
 
 import urllib3
 
-from hsnhub_tx import HSN_CHAIN_ID, UNSIGN_JSON_DIR
-from hsnhub_tx.bank.base import Bank
-from hsnhub_tx.bank.req import GenSendTxJson
-from hsnhub_tx.common.baseReq import GenBaseReqJson
-from hsnhub_tx.module.module import Module
-from hsnhub_tx.utils.contants import HTTP_METHOD_GET, HTTP_METHOD_POST
-from hsnhub_tx.utils.timestamp import now_timestamp
+from autotx import HSN_CHAIN_ID, UNSIGN_JSON_DIR
+from autotx.bank.base import Bank
+from autotx.bank.req import GenSendTxJson
+from autotx.common.baseReq import GenBaseReqJson
+from autotx.module.module import Module
+from autotx.utils.contants import HTTP_METHOD_GET, HTTP_METHOD_POST
+from autotx.utils.timestamp import now_timestamp
 
 http = urllib3.PoolManager()
 ACCOUNT_BALANCE_URL = 'http://172.38.8.89:1317/bank/balances/%s'

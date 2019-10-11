@@ -1,9 +1,9 @@
 import unittest
 
-from hsnhub_tx.auth.account import Account
-from hsnhub_tx.auth.auth import Auth, checkAccount
-from hsnhub_tx.auth.collect.collect import CollectAccount, CollectValidators
-from hsnhub_tx.module.sn import SNGenerator
+from autotx.auth.account import Account
+from autotx.auth.auth import Auth, checkAccount
+from autotx.auth.collect.collect import CollectAccount, CollectValidators
+from autotx.module.sn import SNGenerator
 
 
 class TestAuth(unittest.TestCase):

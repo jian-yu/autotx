@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import sys
-from hsnhub_tx.utils.rwlock import RWLock
+from autotx.utils.rwlock import RWLock
 
 
 class SequenceNumberGenerator(metaclass=ABCMeta):

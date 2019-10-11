@@ -1,11 +1,11 @@
 from abc import ABCMeta, abstractmethod
-from hsnhub_tx.error.errors import IllegalError, EmptyError
-from hsnhub_tx.module.mid import SplitMid
-from hsnhub_tx.module.moduletype import LegalLetterType
-from hsnhub_tx.module.moduletype import CheckType
-from hsnhub_tx.module.moduletype import LegalType
-from hsnhub_tx.utils.balance import Select
-from hsnhub_tx.utils.rwlock import RWLock
+from autotx.error.errors import IllegalError, EmptyError
+from autotx.module.mid import SplitMid
+from autotx.module.moduletype import LegalLetterType
+from autotx.module.moduletype import CheckType
+from autotx.module.moduletype import LegalType
+from autotx.utils.balance import Select
+from autotx.utils.rwlock import RWLock
 
 
 class Registry(metaclass=ABCMeta):

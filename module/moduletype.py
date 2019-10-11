@@ -1,4 +1,4 @@
-from hsnhub_tx.error.errors import IllegalError
+from autotx.error.errors import IllegalError
 
 TYPE_AUTH = 'auth'
 TYPE_BANK = 'bank'
@@ -52,7 +52,7 @@ def LegalType(moduleType):
 
 # 获取mid的类型 return type, error
 def GetType(mid):
-    from hsnhub_tx.module.mid import SplitMid
+    from autotx.module.mid import SplitMid
     separateMID, err = SplitMid(mid)
     if err is not None:
         return None, err

@@ -1,12 +1,12 @@
 import time
 
-from hsnhub_tx.auth.auth import Auth
-from hsnhub_tx.auth.collect import CollectAccount
-from hsnhub_tx.log.logger import Logger
-from hsnhub_tx.scheduler.args import ModuleArgs, PoolArgs
-from hsnhub_tx.scheduler.scheduler import Scheduler
-from hsnhub_tx.simple.module import GetBankers, GetBroadcasters, GetSigners
-from hsnhub_tx.utils.contants import LOG_TIME_FOEMAT
+from autotx.auth.auth import Auth
+from autotx.auth.collect import CollectAccount
+from autotx.log.logger import Logger
+from autotx.scheduler.args import ModuleArgs, PoolArgs
+from autotx.scheduler.scheduler import Scheduler
+from autotx.simple.module import GetBankers, GetBroadcasters, GetSigners
+from autotx.utils.contants import LOG_TIME_FOEMAT
 
 NODE = 'tcp://172.38.8.89:26657'
 

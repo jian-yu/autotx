@@ -1,9 +1,9 @@
-from hsnhub_tx.broadcast.base import BroadCast
-from hsnhub_tx.module.module import Module
+from autotx.broadcast.base import BroadCast
+from autotx.module.module import Module
 import json
 import urllib3
-from hsnhub_tx.utils.contants import HTTP_METHOD_POST
-from hsnhub_tx.utils.timestamp import now_timestamp
+from autotx.utils.contants import HTTP_METHOD_POST
+from autotx.utils.timestamp import now_timestamp
 
 http = urllib3.PoolManager()
 BROADCAST_TX_URL = 'http://172.38.8.89:1317/txs'

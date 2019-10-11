@@ -4,34 +4,24 @@ from queue import Queue
 import time
 import json
 
-from hsnhub_tx import BROADCASTED_TX_DIR
-from hsnhub_tx.auth.auth import Auth
-from hsnhub_tx.bank.bank import Banker
-from hsnhub_tx.broadcast.broadcast import BroadCaster
-from hsnhub_tx.error.errors import (ERROR_BANKER, ERROR_BROADCASTER,
-                                    ERROR_SCHEDULER, ERROR_SIGNER, TxerError)
-from hsnhub_tx.log.logger import Logger
-from hsnhub_tx.module.moduletype import (TYPE_BANK, TYPE_BROADCAST, TYPE_SIGN,
-                                         GetType)
-from hsnhub_tx.module.registry import Registrar
-from hsnhub_tx.scheduler.args import (SendBroadcastArgs, SendCoinArgs,
-                                      SendSignArgs)
-from hsnhub_tx.scheduler.base import Schedule
-from hsnhub_tx.scheduler.status import (SCHED_STATUS_INITIALIZED,
-                                        SCHED_STATUS_INITIALIZING,
-                                        SCHED_STATUS_STARTED,
-                                        SCHED_STATUS_STARTING,
-                                        SCHED_STATUS_UNINITIALIZED,
-                                        SCHED_STATUS_STOPPED,
-                                        SCHED_STATUS_STOPPING,
-                                        CheckStatus)
-from hsnhub_tx.sign.sign import Signer
-from hsnhub_tx.utils.contants import LOG_TIME_FOEMAT
-from hsnhub_tx.utils.pool import Pool
-from hsnhub_tx.utils.rwlock import RWLock
-from hsnhub_tx.utils.timestamp import now_timestamp
+from autotx import BROADCASTED_TX_DIR
+from autotx.auth.auth import Auth
+from autotx.bank.bank import Banker
+from autotx.broadcast.broadcast import BroadCaster
+from autotx.error.errors import (ERROR_BANKER, ERROR_BROADCASTER, ERROR_SCHEDULER, ERROR_SIGNER, TxerError)
+from autotx.log.logger import Logger
+from autotx.module.moduletype import (TYPE_BANK, TYPE_BROADCAST, TYPE_SIGN, GetType)
+from autotx.module.registry import Registrar
+from autotx.scheduler.args import (SendBroadcastArgs, SendCoinArgs, SendSignArgs)
+from autotx.scheduler.base import Schedule
+from autotx.scheduler.status import (SCHED_STATUS_INITIALIZED, SCHED_STATUS_INITIALIZING, SCHED_STATUS_STARTED, SCHED_STATUS_STARTING, SCHED_STATUS_UNINITIALIZED, SCHED_STATUS_STOPPED, SCHED_STATUS_STOPPING, CheckStatus)
+from autotx.sign.sign import Signer
+from autotx.utils.contants import LOG_TIME_FOEMAT
+from autotx.utils.pool import Pool
+from autotx.utils.rwlock import RWLock
+from autotx.utils.timestamp import now_timestamp
 import urllib3
-from hsnhub_tx.utils.contants import HTTP_METHOD_GET
+from autotx.utils.contants import HTTP_METHOD_GET
 http = urllib3.PoolManager()
 TX_HASH_URL = 'http://172.38.8.89:1317/txs'
 

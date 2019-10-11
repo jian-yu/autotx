@@ -1,5 +1,5 @@
 import unittest
-from hsnhub_tx.utils.buffer import Buffer
+from autotx.utils.buffer import Buffer
 
 
 class TestBuffer(unittest.TestCase):

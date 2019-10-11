@@ -1,9 +1,9 @@
-from hsnhub_tx.module.sn import SNGenerator
-from hsnhub_tx.module.mid import GenerateMID
-from hsnhub_tx.module.moduletype import TYPE_BANK, TYPE_BROADCAST, TYPE_SIGN
-from hsnhub_tx.bank.bank import Banker
-from hsnhub_tx.sign.sign import Signer
-from hsnhub_tx.broadcast.broadcast import BroadCaster
+from autotx.module.sn import SNGenerator
+from autotx.module.mid import GenerateMID
+from autotx.module.moduletype import TYPE_BANK, TYPE_BROADCAST, TYPE_SIGN
+from autotx.bank.bank import Banker
+from autotx.sign.sign import Signer
+from autotx.broadcast.broadcast import BroadCaster
 
 snGen = SNGenerator(1, 0)
 

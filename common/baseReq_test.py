@@ -1,7 +1,7 @@
 import unittest
-from hsnhub_tx.common.baseReq import GenBaseReqJson
-from hsnhub_tx.auth.account import Account
-from hsnhub_tx import HSN_CHAIN_ID
+from autotx.common.baseReq import GenBaseReqJson
+from autotx.auth.account import Account
+from autotx import HSN_CHAIN_ID
 
 
 class TestBaseReq(unittest.TestCase):

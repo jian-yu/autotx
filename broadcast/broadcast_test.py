@@ -1,9 +1,9 @@
 import unittest
-from hsnhub_tx.broadcast.broadcast import standardize
-from hsnhub_tx.module.sn import SNGenerator
-from hsnhub_tx.module.mid import GenerateMID
-from hsnhub_tx.module.moduletype import TYPE_BROADCAST
-from hsnhub_tx.broadcast.broadcast import BroadCaster, checkTx
+from autotx.broadcast.broadcast import standardize
+from autotx.module.sn import SNGenerator
+from autotx.module.mid import GenerateMID
+from autotx.module.moduletype import TYPE_BROADCAST
+from autotx.broadcast.broadcast import BroadCaster, checkTx
 
 
 class TestBroadcast(unittest.TestCase):

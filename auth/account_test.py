@@ -1,4 +1,4 @@
-from hsnhub_tx.auth.account import Account
+from autotx.auth.account import Account
 import unittest
 
 

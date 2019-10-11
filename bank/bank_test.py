@@ -1,9 +1,9 @@
 import unittest
-from hsnhub_tx.bank.bank import Banker
-from hsnhub_tx.module.sn import SNGenerator
-from hsnhub_tx.module.mid import GenerateMID
-from hsnhub_tx.module.moduletype import TYPE_BANK
-from hsnhub_tx.auth.account import Account
+from autotx.bank.bank import Banker
+from autotx.module.sn import SNGenerator
+from autotx.module.mid import GenerateMID
+from autotx.module.moduletype import TYPE_BANK
+from autotx.auth.account import Account
 
 
 class TestBanker(unittest.TestCase):

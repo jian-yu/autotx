@@ -1,5 +1,5 @@
-from hsnhub_tx.module.base import BasicModule
-from hsnhub_tx.utils.rwlock import RWLock
+from autotx.module.base import BasicModule
+from autotx.utils.rwlock import RWLock
 
 
 class Module(BasicModule):
