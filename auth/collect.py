@@ -8,9 +8,9 @@ from autotx import (HSN_CLIENT_PATH, HSN_LOCAL_ACCOUNT_PATH, PROJECT_CONFIG_DIR)
 from autotx.auth.account import Account
 from autotx.auth.validator import Validator
 from autotx.utils.contants import HTTP_METHOD_GET
+from autotx.bank.bank import QueryAccountInfo
 
 ACCOUNT_CONFIG_PATH = PROJECT_CONFIG_DIR + '/account.yaml'
-authAccountUrl = 'http://172.38.8.89:1317/auth/accounts/%s'
 VALIDATOR_URL_SET = [
     'http://172.38.8.89:1317/staking/validators?status=bonded',
     "http://172.38.8.89:1317/staking/validators?status=unbonding",
@@ -33,7 +33,7 @@ def CollectAccount():
                                       accType=localAccount['type'])
                     account = CollectAccountFromLocal(account)
                     if account is not None:
-                        account = CollectAccountFromNet(account)
+                        account = QueryAccountInfo(account)
                         if account is not None:
                             accountList.append(account)
                 return accountList
@@ -55,38 +55,6 @@ def CollectAccountFromLocal(account):
         account.setPubkey(localAccountDict['pubkey'])
         return account
     return None
-
-
-def CollectAccountFromNet(account):
-    if account.getAddress() == '':
-        return None
-    try:
-        resp = http.request(HTTP_METHOD_GET,
-                            authAccountUrl % (account.getAddress()))
-        if resp.status == 200:
-            jsonData = json.loads(resp.data)
-            if jsonData and dict(jsonData).get('result') and (
-                    dict(jsonData)['result']).get('value') and ((dict(
-                        jsonData)['result'])['value']).get('address') == '':
-                return None
-            elif ((dict(jsonData)['result'])['value']
-                  ).get('address') == account.getAddress():
-                account.setAccNum(
-                    (dict(jsonData)['result'])['value'].get('account_number'))
-                account.setSequence(
-                    (dict(jsonData)['result'])['value'].get('sequence'))
-                coins = (dict(jsonData)['result'])['value'].get('coins')
-                if coins and len(coins) > 0:
-                    account.setCoins(coins)
-                return account
-            elif resp.status == 500 and dict(json.loads(
-                    resp.data)).get('error'):
-                return None
-            else:
-                return None
-    except Exception as e:
-        print(e)
-        return None
 
 
 def CollectValidators():

@@ -11,5 +11,3 @@ class Validator:
         self.unbondingTime = unbondingHeight
         self.commission = commission
         self.minSelfDelegation = minSelfDelegation
-
-def GetValidator():

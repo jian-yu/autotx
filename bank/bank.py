@@ -5,6 +5,7 @@ import urllib3
 
 from autotx import HSN_CHAIN_ID, UNSIGN_JSON_DIR
 from autotx.bank.base import Bank
+from autotx.utils.file import WriteToFile
 from autotx.bank.req import GenSendTxJson
 from autotx.common.baseReq import GenBaseReqJson
 from autotx.module.module import Module
@@ -14,6 +15,7 @@ from autotx.utils.timestamp import now_timestamp
 http = urllib3.PoolManager()
 ACCOUNT_BALANCE_URL = 'http://172.38.8.89:1317/bank/balances/%s'
 SEND_TX_URL = 'http://172.38.8.89:1317/bank/accounts/%s/transfers'
+ACCOUNT_INFO_URL = 'http://172.38.8.89:1317/auth/accounts/%s'
 
 
 class Banker(Module, Bank):
@@ -21,34 +23,12 @@ class Banker(Module, Bank):
     def __init__(self, mid, calculateCost):
         super(Banker, self).__init__(mid, calculateCost)
 
-    def GetBalance(self, account):
-        self.IncrHandingCount()
-        self.IncrCalledCount()
-        now = now_timestamp()
-        try:
-            if account is None:
-                return None, BankerError('account cannot be none')
-            if account.getAddress() == '':
-                return None, BankerError('account address cannot be empty')
-            account, err = query(account)
-            if err is not None:
-                return None, BankerError(err)
-            self.IncrCompletedCount()
-            return account.getCoins(), None
-        finally:
-            self.SetCalculateCost(now_timestamp() - now)
-            self.DecrHandingCount()
-
     def SendCoins(self, srcAccount, dstAccount, coins, fees, gas, gasAdjust):
         self.IncrHandingCount()
         self.IncrCalledCount()
         now = now_timestamp()
         try:
-            if srcAccount is None or dstAccount is None or coins is None:
-                return None, BankerError('args are invalid')
-            if srcAccount.getAddress() == '' or dstAccount.getAddress() == '':
-                return None, BankerError('account address cannot be empty')
-            srcCoins, err = self.GetBalance(srcAccount)
+            srcCoins, err = GetBalance(srcAccount)
             if err is not None:
                 return None, BankerError(err.msg)
             for srcKey, srcVal in srcCoins.items():
@@ -56,8 +36,12 @@ class Banker(Module, Bank):
                     if srcKey == coin['denom']:
                         if int(srcVal) < int(coin['amount']):
                             return None, BankerError('src account balances are insufficient!')
-            memo = '%s send %s to %s' % (srcAccount.getAddress(), coins, dstAccount.getAddress())
-            baseReqJson, err = GenBaseReqJson(srcAccount.getAddress(), HSN_CHAIN_ID, str(srcAccount.getAccNum()), str(srcAccount.getSequence()), fees, False, memo, gas, gasAdjust)
+            memo = '%s send %s to %s' % (srcAccount.getAddress(), json.dumps(coins), dstAccount.getAddress())
+            srAccount = QueryAccountInfo(srcAccount)
+            # 获取账户最新信息
+            if srAccount is None:
+                return None, BankerError('srcAccount is invalid!')
+            baseReqJson, err = GenBaseReqJson(srcAccount, HSN_CHAIN_ID, fees, False, memo, gas, gasAdjust)
             if err is not None:
                 return None, err
             sendTxJson, err = GenSendTxJson(baseReqJson, coins)
@@ -67,14 +51,11 @@ class Banker(Module, Bank):
             if err is not None:
                 return None, err
             # 写入到文件中
-            unSignJsonFileName = srcAccount.getAddress() + '|' + str(int(round(time.time() * 1000))) + '.json'
-            unSignJsonPath = UNSIGN_JSON_DIR + '/' + unSignJsonFileName
-            with open(unSignJsonPath, 'w', encoding='utf-8') as unSignJsonFile:
-                if unSignJsonFile.writable():
-                    unSignJsonFile.write(sendedTxJson)
-                    self.IncrCompletedCount()
-                    return unSignJsonPath, None
-            return None, BankerError('unable to write into a file')
+            unSignJsonFileName = '[sendCoins] ' + srcAccount.getAddress() + '|' + str(int(round(time.time() * 1000))) + '.json'
+            unSignJsonPath, err = WriteToFile(UNSIGN_JSON_DIR, unSignJsonFileName, sendedTxJson)
+            if err is not None:
+                return None, BankerError(err.msg)
+            return unSignJsonPath, None
         finally:
             self.SetCalculateCost(now_timestamp() - now)
             self.DecrHandingCount()
@@ -94,7 +75,7 @@ def query(account):
         if resp.status == 500:
             return None, BankerError('account address is invalid')
     except Exception as e:
-        return None, BankerError(e)
+        return None, BankerError(e.msg)
 
 
 def postSendTxJson(sendTxJson, dstAccAddr):
@@ -112,10 +93,55 @@ def postSendTxJson(sendTxJson, dstAccAddr):
         return None, BankerError(e)
 
 
-class BankerError(Exception):
+def GetBalance(account):
+    if account is None:
+        return None, BankerError('account cannot be none')
+    if account.getAddress() == '':
+        return None, BankerError('account address cannot be empty')
+    account, err = query(account)
+    if err is not None:
+        return None, BankerError(err)
+    return account.getCoins(), None
 
+
+def QueryAccountInfo(account):
+    if account.getAddress() == '':
+        return None
+    try:
+        resp = http.request(HTTP_METHOD_GET,
+                            ACCOUNT_INFO_URL % (account.getAddress()))
+        if resp.status == 200:
+            jsonData = json.loads(resp.data)
+            if jsonData and dict(jsonData).get('result') and (
+                    dict(jsonData)['result']).get('value') and ((dict(
+                        jsonData)['result'])['value']).get('address') == '':
+                return None
+            elif ((dict(jsonData)['result'])['value']
+                  ).get('address') == account.getAddress():
+                account.setAccNum(
+                    (dict(jsonData)['result'])['value'].get('account_number'))
+                account.setSequence(
+                    (dict(jsonData)['result'])['value'].get('sequence'))
+                coins = (dict(jsonData)['result'])['value'].get('coins')
+                if coins and len(coins) > 0:
+                    account.setCoins(coins)
+                return account
+            elif resp.status == 500 and dict(json.loads(
+                    resp.data)).get('error'):
+                return None
+            else:
+                return None
+    except Exception as e:
+        print(e)
+        return None
+
+
+class BankerError(Exception):
     def __init__(self, msg):
-        self.__message = msg
+        self.message = msg
+
+    def Error(self):
+        return self.message
 
     def __str__(self):
-        return self.__message
+        return self.message

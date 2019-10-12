@@ -1,7 +1,7 @@
 import time
 
 from autotx.auth.auth import Auth
-from autotx.auth.collect import CollectAccount
+from autotx.auth.collect import CollectAccount, CollectValidators
 from autotx.log.logger import Logger
 from autotx.scheduler.args import ModuleArgs, PoolArgs
 from autotx.scheduler.scheduler import Scheduler
@@ -34,6 +34,9 @@ def main():
     print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('have %d account located at local' % (len(accountList))))
     auth = Auth('AUTH|100', 0)
     auth.Add(accountList)
+    # 获取验证者
+    validators = CollectValidators()
+    auth.AddValidatorSet(validators)
     err = scheduler.Start(auth)
     if err is not None:
         print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('An error occurs when starting scheduler: %s' % (err)))
