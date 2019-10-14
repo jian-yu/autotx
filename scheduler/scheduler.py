@@ -485,7 +485,7 @@ class Scheduler(Schedule):
             sendSignData = SendSignArgs(withdrawRewardData.delegator, distributionTxJsonFilePath, self.__node)
             sendSign(sendSignData, self.__signBufferPool)
         if err is not None:
-            print(err)
+            print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn(err.msg))
             sendError(err, distributor.ID(), self.__errorBufferPool)
 
     def randomSendTx(self, accountList):

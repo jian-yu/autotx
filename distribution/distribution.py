@@ -12,6 +12,7 @@ from autotx.utils.contants import HTTP_METHOD_GET, HTTP_METHOD_POST
 from autotx.utils.file import WriteToFile
 from autotx.utils.timestamp import now_timestamp
 from autotx.distribution.req import GenWithdrawDelegatorOneRewardTxJson
+from decimal import Decimal
 
 http = urllib3.PoolManager()
 
@@ -29,27 +30,33 @@ class Distributor(Module, Distribute):
             if err is not None:
                 return None, DistributorError('WithdrawDelegatorOneReward: ' + err.msg)
             memo = '%s withdraw reward from %s' % (delegator.getAddress(), validator.operatorAddr)
-            delegator = QueryAccountInfo(delegator)
-            # 获取账户最新信息
-            if delegator is None:
-                return None, DistributorError('WithdrawDelegatorOneReward: ' + 'delegator is invalid!')
-            baseReqJson, err = GenBaseReqJson(delegator, HSN_CHAIN_ID, fees, False, memo, gas, gasAdjust)
-            if err is not None:
-                return None, DistributorError('WithdrawDelegatorOneReward: ' + err.msg)
-            withdrawTxJson, err = GenWithdrawDelegatorOneRewardTxJson(baseReqJson)
-            if err is not None:
-                return None, DistributorError('WithdrawDelegatorOneReward: ' + err.msg)
-            withdrawnTxJson, err = postWithdrawDelegatorOneReward(withdrawTxJson, delegator.getAddress(), validator.operatorAddr)
-            if err is not None:
-                return None, DistributorError('WithdrawDelegatorOneReward: ' + err.msg)
-            # 写入到文件中
-            unSignJsonFileName = '[withdrawreward]--' + delegator.getAddress() + '|' + str(int(round(time.time() * 1000))) + '.json'
-            unSignJsonPath, err = WriteToFile(UNSIGN_JSON_DIR,
-                                              unSignJsonFileName,
-                                              withdrawnTxJson)
-            if err is not None:
-                return None, DistributorError(err.msg)
-            return unSignJsonPath, None
+            if rewards:
+                if len(rewards) == 0:
+                    return None, DistributorError('WithdrawDelegatorOneReward: ' + 'reward is empty')
+                for reward in rewards:
+                    if reward['denom'] == 'hsn':
+                        if Decimal(reward['amount']) == Decimal('0'):
+                            return None, DistributorError('WithdrawDelegatorOneReward: ' + 'reward is 0')
+                delegator = QueryAccountInfo(delegator)
+                # 获取账户最新信息
+                if delegator is None:
+                    return None, DistributorError('WithdrawDelegatorOneReward: ' + 'delegator is invalid!')
+                baseReqJson, err = GenBaseReqJson(delegator, HSN_CHAIN_ID, fees, False, memo, gas, gasAdjust)
+                if err is not None:
+                    return None, DistributorError('WithdrawDelegatorOneReward: ' + err.msg)
+                withdrawTxJson, err = GenWithdrawDelegatorOneRewardTxJson(baseReqJson)
+                if err is not None:
+                    return None, DistributorError('WithdrawDelegatorOneReward: ' + err.msg)
+                withdrawnTxJson, err = postWithdrawDelegatorOneReward(withdrawTxJson, delegator.getAddress(), validator.operatorAddr)
+                if err is not None:
+                    return None, DistributorError('WithdrawDelegatorOneReward: ' + err.msg)
+                # 写入到文件中
+                unSignJsonFileName = '[withdrawreward]--' + delegator.getAddress() + '|' + str(int(round(time.time() * 1000))) + '.json'
+                unSignJsonPath, err = WriteToFile(UNSIGN_JSON_DIR, unSignJsonFileName, withdrawnTxJson)
+                if err is not None:
+                    return None, DistributorError(err.msg)
+                return unSignJsonPath, None
+            return None, DistributorError('WithdrawDelegatorOneReward: ' + 'reward is invalid!')
         finally:
             self.SetCalculateCost(now_timestamp() - now)
             self.DecrHandingCount()
