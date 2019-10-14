@@ -1,9 +1,10 @@
 from autotx.module.sn import SNGenerator
 from autotx.module.mid import GenerateMID
-from autotx.module.moduletype import TYPE_BANK, TYPE_BROADCAST, TYPE_SIGN
+from autotx.module.moduletype import TYPE_BANK, TYPE_BROADCAST, TYPE_SIGN, TYPE_STAKING
 from autotx.bank.bank import Banker
 from autotx.sign.sign import Signer
 from autotx.broadcast.broadcast import BroadCaster
+from autotx.staking.staking import Stakinger
 
 snGen = SNGenerator(1, 0)
 
@@ -45,3 +46,16 @@ def GetBroadcasters(count):
         broadcaster = BroadCaster(mid, 0)
         broadcasters.append(broadcaster)
     return broadcasters, None
+
+
+def GetStakingers(count):
+    stakingers = []
+    if count == 0:
+        return stakingers, None
+    for i in range(count):
+        mid, err = GenerateMID(TYPE_STAKING, snGen.Get())
+        if err is not None:
+            return stakingers, err
+        stakinger = Stakinger(mid, 0)
+        stakingers.append(stakinger)
+    return stakingers, None

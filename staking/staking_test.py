@@ -1,5 +1,5 @@
 import unittest
-from autotx.staking.delegate import Delegator
+from autotx.staking.staking import Stakinger
 from autotx.auth.validator import Validator
 from autotx.module.sn import SNGenerator
 from autotx.module.mid import GenerateMID
@@ -11,7 +11,7 @@ class TestDelegate(unittest.TestCase):
     def setUp(self):
         self.sn = SNGenerator(1, 0)
         mid = GenerateMID(TYPE_STAKING, self.sn.Get())
-        self.delegateOperator = Delegator(mid, 0)
+        self.stakinger = Stakinger(mid, 0)
         self.delegator = Account('hsn1', '12345678', 'local', '0', '32', 'hsn1p8hqjcsxat30zgllpdkvgtutctrhun70uv9ts0', 'hsnpub1addwnpepqvfe59jmpyjqxjkez68gh3f60utmljpzhfm29af9z98n758zpqns7m4aj02')
         self.validator = Validator(
             'hsnvaloper1p8hqjcsxat30zgllpdkvgtutctrhun70fyw3q3', 'hsnvalconspub1zcjduepqjlzvnup2xvanh94yf40eadzfs4e57tc63n0qlg8m6wjs8urq25esqkwnd3', False, 2, '3189846465', '3189846465.000000000000000000',
@@ -22,7 +22,7 @@ class TestDelegate(unittest.TestCase):
         pass
 
     def test_delegate(self):
-        delegateJsonFilePath, err = self.delegateOperator.Delegate(self.delegator, self.validator, {'denom': 'hsn', 'amount': '50'}, [{'denom': 'hsn', 'amount': '1'}], '100000', '1.0')
+        delegateJsonFilePath, err = self.stakinger.Delegate(self.delegator, self.validator, {'denom': 'hsn', 'amount': '50'}, [{'denom': 'hsn', 'amount': '1'}], '100000', '1.0')
         print(delegateJsonFilePath)
         self.assertIsNone(err)
 

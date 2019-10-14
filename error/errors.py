@@ -2,6 +2,7 @@ ERROR_BANKER = 'banker error'
 ERROR_SIGNER = 'signer error'
 ERROR_BROADCASTER = 'broadcaster error'
 ERROR_SCHEDULER = 'scheduler error'
+ERROR_STAKINGER = 'stakinger error'
 
 
 class TxerError:

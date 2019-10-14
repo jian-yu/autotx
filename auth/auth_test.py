@@ -27,7 +27,7 @@ class TestAuth(unittest.TestCase):
         validators = CollectValidators()
         auth.AddValidatorSet(validators)
         print(validators)
-        print(auth.GetValidatorDict)
+        print(auth.GetValidatorDict())
         self.assertGreater(len(validators), 0)
 
 

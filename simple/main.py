@@ -5,7 +5,7 @@ from autotx.auth.collect import CollectAccount, CollectValidators
 from autotx.log.logger import Logger
 from autotx.scheduler.args import ModuleArgs, PoolArgs
 from autotx.scheduler.scheduler import Scheduler
-from autotx.simple.module import GetBankers, GetBroadcasters, GetSigners
+from autotx.simple.module import GetBankers, GetBroadcasters, GetSigners, GetStakingers
 from autotx.utils.contants import LOG_TIME_FOEMAT
 
 NODE = 'tcp://172.38.8.89:26657'
@@ -13,7 +13,7 @@ NODE = 'tcp://172.38.8.89:26657'
 
 def main():
     scheduler = Scheduler()
-    poolArgs = PoolArgs(50, 10, 50, 10, 50, 10, 50, 100)
+    poolArgs = PoolArgs(50, 10, 50, 10, 50, 10, 50, 10, 50, 100)
     bankers, err = GetBankers(1)
     if err is not None:
         print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('An error occurs when building banker: %s' % (err)))
@@ -23,7 +23,10 @@ def main():
     broadcasters, err = GetBroadcasters(1)
     if err is not None:
         print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('An error occurs when building broadcaster: %s' % (err)))
-    moduleArgs = ModuleArgs(bankers, signers, broadcasters)
+    stakingers, err = GetStakingers(1)
+    if err is not None:
+        print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('An error occurs when building stakinger: %s' % (err)))
+    moduleArgs = ModuleArgs(bankers, signers, broadcasters, stakingers)
 
     err = scheduler.Init(moduleArgs, poolArgs, NODE)
     if err is not None:

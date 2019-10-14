@@ -1,31 +1,44 @@
+import json
 import random
 import threading
-from queue import Queue
 import time
-import json
+from queue import Queue
+
+import urllib3
 
 from autotx import BROADCASTED_TX_DIR
 from autotx.auth.auth import Auth
 from autotx.bank.bank import Banker
 from autotx.broadcast.broadcast import BroadCaster
-from autotx.error.errors import (ERROR_BANKER, ERROR_BROADCASTER, ERROR_SCHEDULER, ERROR_SIGNER, TxerError)
+from autotx.error.errors import (ERROR_BANKER, ERROR_BROADCASTER,
+                                 ERROR_SCHEDULER, ERROR_SIGNER,
+                                 ERROR_STAKINGER, TxerError)
 from autotx.log.logger import Logger
-from autotx.module.moduletype import (TYPE_BANK, TYPE_BROADCAST, TYPE_SIGN, GetType)
+from autotx.module.moduletype import (TYPE_BANK, TYPE_BROADCAST, TYPE_SIGN,
+                                      TYPE_STAKING, GetType)
 from autotx.module.registry import Registrar
-from autotx.scheduler.args import (SendBroadcastArgs, SendCoinArgs, SendSignArgs)
+from autotx.scheduler.args import (DelegateArgs, SendBroadcastArgs,
+                                   SendCoinArgs, SendSignArgs, StakingArgs)
 from autotx.scheduler.base import Schedule
-from autotx.scheduler.status import (SCHED_STATUS_INITIALIZED, SCHED_STATUS_INITIALIZING, SCHED_STATUS_STARTED, SCHED_STATUS_STARTING, SCHED_STATUS_UNINITIALIZED, SCHED_STATUS_STOPPED, SCHED_STATUS_STOPPING, CheckStatus)
+from autotx.scheduler.status import (SCHED_STATUS_INITIALIZED,
+                                     SCHED_STATUS_INITIALIZING,
+                                     SCHED_STATUS_STARTED,
+                                     SCHED_STATUS_STARTING,
+                                     SCHED_STATUS_STOPPED,
+                                     SCHED_STATUS_STOPPING,
+                                     SCHED_STATUS_UNINITIALIZED, CheckStatus)
 from autotx.sign.sign import Signer
-from autotx.utils.contants import LOG_TIME_FOEMAT
+from autotx.staking.staking import Stakinger
+from autotx.utils.contants import HTTP_METHOD_GET, LOG_TIME_FOEMAT
 from autotx.utils.pool import Pool
 from autotx.utils.rwlock import RWLock
 from autotx.utils.timestamp import now_timestamp
-import urllib3
-from autotx.utils.contants import HTTP_METHOD_GET
+
 http = urllib3.PoolManager()
 TX_HASH_URL = 'http://172.38.8.89:1317/txs'
 
 
+# Scheduler: main to schedule register modules
 class Scheduler(Schedule):
 
     def __init__(self):
@@ -35,15 +48,10 @@ class Scheduler(Schedule):
         self.__bankerBufferPool = None
         self.__signBufferPool = None
         self.__broadcastBufferPool = None
+        self.__stakingBufferPool = None
         self.__errorBufferPool = None
         self.__auth = None
         self.__node = 'tcp://172.38.8.89:26657'
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
 
     def Init(self, modulesArgs, poolArgs, node):
         err = None
@@ -101,6 +109,7 @@ class Scheduler(Schedule):
             self.transfer(threading.currentThread())
             self.sign(threading.currentThread())
             self.broadcast(threading.currentThread())
+            self.staking(threading.currentThread())
             print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('Scheduler has been started.'))
             return err
         finally:
@@ -123,6 +132,7 @@ class Scheduler(Schedule):
             self.__bankerBufferPool.Close()
             self.__signBufferPool.Close()
             self.__broadcastBufferPool.Close()
+            self.__stakingBufferPool.Close()
             self.__errorBufferPool.Close()
             print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('Scheduler has been stopped.'))
             return err
@@ -163,9 +173,8 @@ class Scheduler(Schedule):
         finally:
             self.__rwlock.release()
 
-    # 组件注册
+    # register module
     def RegisterModules(self, modules):
-        print(modules.Bankers)
         for banker in modules.Bankers:
             if banker is None:
                 continue
@@ -185,7 +194,7 @@ class Scheduler(Schedule):
                 continue
         print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('signer modules register successfully!'))
         for broadcaster in modules.Broadcasters:
-            if signer is None:
+            if broadcaster is None:
                 continue
             ok, err = self.__registrar.Register(broadcaster)
             if err is not None:
@@ -193,28 +202,42 @@ class Scheduler(Schedule):
             if ok is False:
                 continue
         print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('broadcaster modules register successfully!'))
+        for staking in modules.Stakings:
+            if staking is None:
+                continue
+            ok, err = self.__registrar.Register(staking)
+            if err is not None:
+                return err
+            if ok is False:
+                continue
+        print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('staking modules register successfully!'))
 
     def __initBufferPool(self, poolArgs):
-        # 初始化banker缓存池
+        # init banker buffer pool
         if self.__bankerBufferPool is not None and self.__bankerBufferPool.Closed() is False:
             self.__bankerBufferPool.Close()
         self.__bankerBufferPool = Pool(poolArgs.BankerBufCap, poolArgs.BankerMaxBufNumber)
         print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('banker buffer pool built by bufCap = %s and maxBufNumber = %s' % (poolArgs.BankerBufCap, poolArgs.BankerMaxBufNumber)))
-        # 初始化signer缓存池
+        # init signer buffer pool
         if self.__signBufferPool is not None and self.__signBufferPool.Closed() is False:
             self.__signBufferPool.Close()
         self.__signBufferPool = Pool(poolArgs.SignerBufCap, poolArgs.SignerBufMaxNumber)
         print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('signer buffer pool built by bufCap = %s and maxBufNumber = %s' % (poolArgs.SignerBufCap, poolArgs.SignerBufMaxNumber)))
-        # 初始化广播交易缓存池
+        # init broadcaster buffer pool
         if self.__broadcastBufferPool is not None and self.__broadcastBufferPool.Closed() is False:
             self.__broadcastBufferPool.Close()
         self.__broadcastBufferPool = Pool(poolArgs.BroadcasterBufCap, poolArgs.BroadcasterMaxNumber)
         print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('broadcaster buffer pool built by bufCap = %s and maxBufNumber = %s' % (poolArgs.BroadcasterBufCap, poolArgs.BroadcasterMaxNumber)))
-        # 初始化错误缓存池
+        # init staking buffer pool
+        if self.__stakingBufferPool is not None and self.__stakingBufferPool.Closed() is False:
+            self.__stakingBufferPool.Close()
+        self.__stakingBufferPool = Pool(poolArgs.StakingBufCap, poolArgs.StakingMaxNumber)
+        print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('staking buffer pool built by bufCap = %s and maxBufNumber = %s' % (poolArgs.StakingBufCap, poolArgs.StakingMaxNumber)))
+        # init error buffer pool
         if self.__errorBufferPool is not None and self.__errorBufferPool.Closed() is False:
             self.__errorBufferPool.Close()
         self.__errorBufferPool = Pool(poolArgs.BroadcasterBufCap, poolArgs.BroadcasterMaxNumber)
-        print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('error buffer pool built by bufCap = %s and maxBufNumber = %s' % (poolArgs.BroadcasterBufCap, poolArgs.BroadcasterMaxNumber)))
+        print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('error buffer pool built by bufCap = %s and maxBufNumber = %s' % (poolArgs.ErrorBufCap, poolArgs.ErrorMaxNumber)))
 
     def __checkBufferPool(self):
         if self.__bankerBufferPool is None:
@@ -233,38 +256,23 @@ class Scheduler(Schedule):
             return CheckBufferPoolError('empty error buffer pool')
         if self.__errorBufferPool is not None and self.__errorBufferPool.Closed():
             self.__errorBufferPool = Pool(self.__errorBufferPool.BufCap, self.__errorBufferPool.MaxBufNumber)
+        if self.__stakingBufferPool is None:
+            return CheckBufferPoolError('empty staking buffer pool')
+        if self.__stakingBufferPool is not None and self.__stakingBufferPool.Closed():
+            self.__stakingBufferPool = Pool(self.__stakingBufferPool.BufCap, self.__stakingBufferPool.MaxBufNumber)
 
     def randomTx(self, schedulerThread):
         def func():
             while True:
                 print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('current threading is %s' % (threading.currentThread())))
                 print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('scheduler thread %s is alive' % (schedulerThread.getName())))
-                accountDict = self.__auth.GetAccountDict()
-                accountList = list(accountDict.values())
-                length = len(accountList)
-                if length == 0:
-                    continue
-                random0 = random.randint(0, length-1)
-                random1 = random.randint(0, length-1)
-                if random0 == random1:
-                    continue
-                srcAccount = accountList[random0]
-                dstAccount = accountList[random1]
-                if srcAccount is None:
-                    continue
-                if dstAccount is None:
-                    continue
-                sendCoins = [{'denom': 'hsn', 'amount': str(random.randint(0, 50000))}]
-                fees = [{'denom': 'hsn', 'amount': str(random.randint(0, 10))}]
-                gasList = ['100000', '200000', '150000']
-                randomGas = random.randint(0, 2)
-                gas = gasList[randomGas]
-                gasAdjustList = ['1.0', '1.1', '1.2', '1.3', '1.4', '1.5']
-                randomGasAdjust = random.randint(0, 5)
-                gasAdjust = gasAdjustList[randomGasAdjust]
-                sendCoinTx = SendCoinArgs(srcAccount, dstAccount, sendCoins, fees, gas, gasAdjust)
-                self.sendBank(sendCoinTx)
-                # time.sleep(random.randint(0, 3600))
+                accountList = list(self.__auth.GetAccountDict().values())
+                validatorList = list(self.__auth.GetValidatorDict().values())
+                if random.randint(0, 10) % 2 == 0:
+                    self.randomSendTx(accountList)
+                else:
+                    self.randomDelegateTx(accountList, validatorList)
+                time.sleep(random.randint(1, 600))
         thread = threading.Thread(target=func)
         thread.name = 'randomTx'
         thread.start()
@@ -290,13 +298,13 @@ class Scheduler(Schedule):
         if banker is None or err is not None:
             errMsg = 'could not get a banker: %s' % (err)
             sendError(TxerError(ERROR_BANKER, errMsg), '', self.__errorBufferPool)
-            self.sendBank(data)
+            sendBank(data)
             return
         ok = isinstance(banker, Banker)
         if ok is False:
             errMsg = 'incorrect downloader type: ID: %s' % (banker.ID())
             sendError(TxerError(ERROR_BANKER, errMsg), banker.ID(), self.__errorBufferPool)
-            self.sendBank(data)
+            sendBank(data)
             return
         sendedTxJsonFilePath, err = banker.SendCoins(data.srcAccount, data.dstAccount, data.coins, data.fees, data.gas, data.gasAdjust)
         if sendedTxJsonFilePath is not None:
@@ -304,19 +312,6 @@ class Scheduler(Schedule):
             sendSign(sendSignData, self.__signBufferPool)
         if err is not None:
             sendError(err, banker.ID(), self.__errorBufferPool)
-
-    def sendBank(self, data):
-        if data is None or self.__bankerBufferPool is None or self.__bankerBufferPool.Closed():
-            return False
-        print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('enter send t banker'))
-
-        def func(data):
-            err = self.__bankerBufferPool.Put(data)
-            if err is not None:
-                print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('the bank pool was closed'))
-
-        thread = threading.Thread(target=func(data))
-        thread.start()
 
     def sign(self, schedulerThread):
         def func():
@@ -389,6 +384,96 @@ class Scheduler(Schedule):
         if err is not None:
             sendError(err, broadcaster.ID(), self.__errorBufferPool)
 
+    def staking(self, schedulerThread):
+        def func():
+            while True:
+                print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('current threading is %s' % (threading.currentThread())))
+                print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('scheduler thread %s is alive' % (schedulerThread.getName())))
+                stakingData, err = self.__stakingBufferPool.Get()
+                if err is not None:
+                    print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('the stakinger pool is closed, break'))
+                    break
+                # include delegate, redelegate and unbondingDelegate
+                if stakingData and stakingData.getType() == 'delegate':
+                    self.delegateOne(stakingData.getData())
+        thread = threading.Thread(target=func)
+        thread.name = 'staking'
+        thread.start()
+
+    def delegateOne(self, delegateData):
+        if delegateData is None or isinstance(delegateData, DelegateArgs) is False or delegateData.Check() is not None:
+            return
+        stakinger, err = self.__registrar.Get(TYPE_STAKING)
+        if stakinger is None or err is not None:
+            errMsg = 'could not get a stakinger: %s' % (err)
+            sendError(TxerError(ERROR_STAKINGER, errMsg), '', self.__errorBufferPool)
+            stakingArgs = StakingArgs('delegate', delegateData)
+            sendStaking(stakingArgs)
+            return
+        ok = isinstance(stakinger, Stakinger)
+        if ok is False:
+            errMsg = 'incorrect stakinger type: ID: %s' % (stakinger.ID())
+            sendError(TxerError(ERROR_STAKINGER, errMsg), stakinger.ID(), self.__errorBufferPool)
+            stakingArgs = StakingArgs('delegate', delegateData)
+            sendStaking(stakingArgs)
+            return
+        delegateTxJsonFilePath, err = stakinger.Delegate(delegateData.delegator, delegateData.validator, delegateData.coin, delegateData.fees, delegateData.gas, delegateData.gasAdjust)
+        if delegateTxJsonFilePath is not None:
+            sendSignData = SendSignArgs(delegateData.delegator, delegateTxJsonFilePath, self.__node)
+            sendSign(sendSignData, self.__signBufferPool)
+        if err is not None:
+            sendError(err, stakinger.ID(), self.__errorBufferPool)
+
+    def randomSendTx(self, accountList):
+        length = len(accountList)
+        if length == 0:
+            return
+        random0 = random.randint(0, length-1)
+        random1 = random.randint(0, length-1)
+        if random0 == random1:
+            return
+        srcAccount = accountList[random0]
+        dstAccount = accountList[random1]
+        if srcAccount is None:
+            return
+        if dstAccount is None:
+            return
+        sendCoins = [{'denom': 'hsn', 'amount': str(random.randint(0, 50000))}]
+        fees = [{'denom': 'hsn', 'amount': str(random.randint(1, 10))}]
+        gasList = ['100000', '200000', '150000']
+        randomGas = random.randint(0, 2)
+        gas = gasList[randomGas]
+        gasAdjustList = ['1.0', '1.1', '1.2', '1.3', '1.4', '1.5']
+        randomGasAdjust = random.randint(0, 5)
+        gasAdjust = gasAdjustList[randomGasAdjust]
+        sendCoinTx = SendCoinArgs(srcAccount, dstAccount, sendCoins, fees, gas, gasAdjust)
+        sendBank(sendCoinTx, self.__bankerBufferPool)
+
+    def randomDelegateTx(self, delegatorList, validatorList):
+        length0 = len(delegatorList)
+        length1 = len(validatorList)
+        if length0 == 0 or length1 == 0:
+            return
+        random0 = random.randint(0, length0-1)
+        random1 = random.randint(0, length1-1)
+        delegator = delegatorList[random0]
+        validator = validatorList[random1]
+        if delegator is None:
+            return
+        if validator is None:
+            return
+        delegateCoin = {'denom': 'hsn', 'amount': str(random.randint(0, 1000))}
+        fees = [{'denom': 'hsn', 'amount': str(random.randint(1, 10))}]
+        gasList = ['100000', '200000', '150000']
+        randomGas = random.randint(0, 2)
+        gas = gasList[randomGas]
+        gasAdjustList = ['1.0', '1.1', '1.2', '1.3', '1.4', '1.5']
+        randomGasAdjust = random.randint(0, 5)
+        gasAdjust = gasAdjustList[randomGasAdjust]
+        delegateTx = DelegateArgs(delegator, validator, delegateCoin, fees, gas, gasAdjust)
+        stakingArgs = StakingArgs('delegate', delegateTx)
+        sendStaking(stakingArgs, self.__stakingBufferPool)
+
 
 def saveTxRecord(srcAccount, body):
     def func(srcAccount, body):
@@ -432,6 +517,33 @@ def checkTx(body):
         return None, CheckTxError('unknown error')
     except Exception as e:
         return None, CheckTxError(e)
+
+
+def sendBank(data, bankerBufferPool):
+    if data is None or bankerBufferPool is None or bankerBufferPool.Closed():
+        return False
+    print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('enter send t banker'))
+
+    def func(data):
+        err = bankerBufferPool.Put(data)
+        if err is not None:
+            print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('the bank pool was closed'))
+
+    thread = threading.Thread(target=func(data))
+    thread.start()
+
+
+def sendStaking(body, stakingBufferPool):
+    if body is None or stakingBufferPool is None or stakingBufferPool.Closed():
+        return False
+
+    def func(body):
+        err = stakingBufferPool.Put(body)
+        if err is not None:
+            print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('the delegate pool was closed'))
+
+    thread = threading.Thread(target=func(body))
+    thread.start()
 
 
 def sendBroadcast(body, broadcastBufferPool):
@@ -478,6 +590,8 @@ def sendError(err, mid, errBufPool):
                 errType = ERROR_BROADCASTER
             elif moduleType == TYPE_SIGN:
                 errType = ERROR_SIGNER
+            elif moduleType == TYPE_STAKING:
+                errType = ERROR_STAKINGER
         txerError = TxerError(errType, err)
     if errBufPool.Closed():
         return False

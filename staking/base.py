@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-class Delegate(metaclass=ABCMeta):
+class Staking(metaclass=ABCMeta):
     # Delegate delegator must be a invalid account, coin must is a amount of hsn
     @abstractmethod
     def Delegate(self, delegator, validator, coin):

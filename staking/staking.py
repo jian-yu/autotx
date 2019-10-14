@@ -8,7 +8,7 @@ from autotx.bank.bank import GetBalance
 from autotx.common.baseReq import GenBaseReqJson
 from autotx.module.module import Module
 from autotx.bank.bank import QueryAccountInfo
-from autotx.staking.base import Delegate
+from autotx.staking.base import Staking
 from autotx.staking.req import GenDelegateTxJson
 from autotx.utils.contants import HTTP_METHOD_GET, HTTP_METHOD_POST
 from autotx.utils.file import WriteToFile
@@ -19,9 +19,9 @@ DELEGATOR_DELEGATE_URL = 'http://172.38.8.89:1317/staking/delegators/%s/delegati
 DELEGATOR_UNBONDING_DELEGATIONS_URL = 'http://172.38.8.89:1317/staking/delegators/%s/unbonding_delegations'
 
 
-class Delegator(Module, Delegate):
+class Stakinger(Module, Staking):
     def __init__(self, mid, calculateCost):
-        super(Delegator, self).__init__(mid, calculateCost)
+        super(Stakinger, self).__init__(mid, calculateCost)
 
     def Delegate(self, delegator, validator, coin, fees, gas, gasAdjust):
         self.IncrHandingCount()
@@ -53,7 +53,7 @@ class Delegator(Module, Delegate):
             if err is not None:
                 return None, err
             # 写入到文件中
-            unSignJsonFileName = '[delegate] ' + delegator.getAddress() + '|' + str(int(round(time.time() * 1000))) + '.json'
+            unSignJsonFileName = '[delegate]--' + delegator.getAddress() + '|' + str(int(round(time.time() * 1000))) + '.json'
             unSignJsonPath, err = WriteToFile(UNSIGN_JSON_DIR,
                                               unSignJsonFileName,
                                               delegatedTxJson)

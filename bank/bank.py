@@ -51,7 +51,7 @@ class Banker(Module, Bank):
             if err is not None:
                 return None, err
             # 写入到文件中
-            unSignJsonFileName = '[sendCoins] ' + srcAccount.getAddress() + '|' + str(int(round(time.time() * 1000))) + '.json'
+            unSignJsonFileName = '[sendCoins]--' + srcAccount.getAddress() + '|' + str(int(round(time.time() * 1000))) + '.json'
             unSignJsonPath, err = WriteToFile(UNSIGN_JSON_DIR, unSignJsonFileName, sendedTxJson)
             if err is not None:
                 return None, BankerError(err.msg)

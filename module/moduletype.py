@@ -3,7 +3,7 @@ from autotx.error.errors import IllegalError
 TYPE_AUTH = 'auth'
 TYPE_BANK = 'bank'
 TYPE_DISTRIBUTION = 'distribution'
-TYPE_STAKING = 'staking'
+TYPE_STAKING = 'STAKING'
 TYPE_SIGN = 'sign'
 TYPE_BROADCAST = 'broadcast'
 

@@ -1,27 +1,33 @@
 class PoolArgs:
-    def __init__(self, bankerBufCap, bankerMaxBufNumber, signerBufCap, signerBufMaxNumber, broadcasterBufCap, broadcasterMaxNumber, errorBufCap, errorMaxNumber):
+    def __init__(self, bankerBufCap, bankerMaxBufNumber, signerBufCap, signerBufMaxNumber, broadcasterBufCap, broadcasterMaxNumber, stakingBufCap, stakingMaxNumber, errorBufCap, errorMaxNumber):
         self.BankerBufCap = bankerBufCap
         self.BankerMaxBufNumber = bankerMaxBufNumber
         self.SignerBufCap = signerBufCap
         self.SignerBufMaxNumber = signerBufMaxNumber
         self.BroadcasterBufCap = broadcasterBufCap
         self.BroadcasterMaxNumber = broadcasterMaxNumber
+        self.StakingBufCap = stakingBufCap
+        self.StakingMaxNumber = stakingMaxNumber
         self.ErrorBufCap = errorBufCap
         self.ErrorMaxNumber = errorMaxNumber
 
     def Check(self):
         if self.BankerBufCap == 0:
-            return PoolArgsError('zero bank buffer capacity')
+            return PoolArgsError('zero banker buffer capacity')
         if self.BankerMaxBufNumber == 0:
-            return PoolArgsError('zero bank max buffer number')
+            return PoolArgsError('zero banker max buffer number')
         if self.SignerBufCap == 0:
-            return PoolArgsError('zero sign buffer capacity')
+            return PoolArgsError('zero signer buffer capacity')
         if self.SignerBufMaxNumber == 0:
-            return PoolArgsError('zero sign max buffer number')
+            return PoolArgsError('zero signer max buffer number')
         if self.BroadcasterBufCap == 0:
-            return PoolArgsError('zero broadcast buffer capacity')
+            return PoolArgsError('zero broadcaster buffer capacity')
         if self.BroadcasterMaxNumber == 0:
-            return PoolArgsError('zero broadcast max buffer number')
+            return PoolArgsError('zero broadcaster max buffer number')
+        if self.StakingBufCap == 0:
+            return PoolArgsError('zero staking buffer capacity')
+        if self.StakingMaxNumber == 0:
+            return PoolArgsError('zero staking max buffer number')
         if self.ErrorBufCap == 0:
             return PoolArgsError('zero error buffer capacity')
         if self.ErrorMaxNumber == 0:
@@ -38,10 +44,11 @@ class PoolArgsError(Exception):
 
 
 class ModuleArgs:
-    def __init__(self, bankers, signers, broadcasters):
+    def __init__(self, bankers, signers, broadcasters, stakings):
         self.Bankers = bankers
         self.Signers = signers
         self.Broadcasters = broadcasters
+        self.Stakings = stakings
 
     def Check(self):
         if len(self.Bankers) == 0:
@@ -49,7 +56,9 @@ class ModuleArgs:
         if len(self.Signers) == 0:
             return ModuleArgsError('empty signer list')
         if len(self.Broadcasters) == 0:
-            return ModuleArgsError('empty broadcast list')
+            return ModuleArgsError('empty broadcaster list')
+        if len(self.Stakings) == 0:
+            return ModuleArgsError('empty staking list')
         return None
 
 
@@ -77,7 +86,7 @@ class SendCoinArgs:
             return SendCoinArgsError('dstAccount is invalid')
         if self.coins is None or len(self.coins) == 0:
             return SendCoinArgsError('empty coins')
-        if self.coins is None or len(self.fees) == 0:
+        if self.fees is None or len(self.fees) == 0:
             return SendCoinArgsError('empty fess')
         if self.gas is None:
             return SendCoinArgsError('empty gas')
@@ -133,6 +142,51 @@ class SendBroadcastArgs:
 
 
 class SendBroadcastArgsError(Exception):
+    def __init__(self, msg):
+        self.message = msg
+
+    def __str__(self):
+        return self.message
+
+
+class DelegateArgs():
+    def __init__(self, delegator, validator, coin, fees, gas, gasAdjust):
+        self.delegator = delegator
+        self.validator = validator
+        self.coin = coin
+        self.fees = fees
+        self.gas = gas
+        self.gasAdjust = gasAdjust
+
+    def Check(self):
+        if self.delegator is None or self.delegator.getAddress() == '':
+            return DelegateArgsError('delegator is invalid')
+        if self.validator is None:
+            return DelegateArgsError('validator is invalid')
+        if self.coin is None:
+            return DelegateArgsError('empty coins')
+        if self.fees is None or len(self.fees) == 0:
+            return DelegateArgsError('empty fess')
+        if self.gas is None:
+            return DelegateArgsError('empty gas')
+        if self.gasAdjust is None:
+            return DelegateArgsError('empty gasAdjust')
+        return None
+
+
+class StakingArgs():
+    def __init__(self, _type, data):
+        self._type = _type
+        self.data = data
+
+    def getType(self):
+        return self._type
+
+    def getData(self):
+        return self.data
+
+
+class DelegateArgsError(Exception):
     def __init__(self, msg):
         self.message = msg
 
