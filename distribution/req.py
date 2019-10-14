@@ -1,15 +1,13 @@
 import json
 
 
-def GenSendTxJson(baseReq, amount):
-    if baseReq is None or amount is None:
+def GenWithdrawDelegatorOneRewardTxJson(baseReq):
+    if baseReq is None:
         return None, ArgsError('args are insufficient')
-    if len(amount) == 0:
-        return None, ArgsError('amount cannot be empty')
     baseReqJsonObj = json.loads(baseReq)
     if baseReqJsonObj is None:
         return None, ParseError('json parse error')
-    data = {'base_req': baseReqJsonObj, 'amount': amount}
+    data = {'base_req': baseReqJsonObj}
     jsonData = json.dumps(data)
     if jsonData is None:
         return None, ParseError('json parse error')

@@ -52,7 +52,7 @@ class Buffer:
 
 class BufferClosedError(Exception):
     def __init__(self):
-        self.__message = 'buffer had been closed!'
+        self.msg = 'buffer had been closed!'
 
     def __str__(self):
-        return self.__message
+        return self.msg

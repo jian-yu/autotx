@@ -15,10 +15,10 @@ SCHED_STATUS_STOPPED = 6
 
 class CheckStatusError(Exception):
     def __init__(self, msg):
-        self.message = msg
+        self.msg = msg
 
     def __str__(self):
-        return self.message
+        return self.msg
 
 
 def CheckStatus(srcStatus, dstStatus):

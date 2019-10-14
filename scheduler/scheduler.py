@@ -10,15 +10,16 @@ from autotx import BROADCASTED_TX_DIR
 from autotx.auth.auth import Auth
 from autotx.bank.bank import Banker
 from autotx.broadcast.broadcast import BroadCaster
+from autotx.distribution.distribution import Distributor
 from autotx.error.errors import (ERROR_BANKER, ERROR_BROADCASTER,
                                  ERROR_SCHEDULER, ERROR_SIGNER,
-                                 ERROR_STAKINGER, TxerError)
+                                 ERROR_STAKINGER, ERROR_DISTRIBUTION, TxerError)
 from autotx.log.logger import Logger
 from autotx.module.moduletype import (TYPE_BANK, TYPE_BROADCAST, TYPE_SIGN,
-                                      TYPE_STAKING, GetType)
+                                      TYPE_STAKING, GetType, TYPE_DISTRIBUTION)
 from autotx.module.registry import Registrar
 from autotx.scheduler.args import (DelegateArgs, SendBroadcastArgs,
-                                   SendCoinArgs, SendSignArgs, StakingArgs)
+                                   SendCoinArgs, SendSignArgs, StakingArgs, WithdrawDelegatorOneRewardArgs, DistributionArgs)
 from autotx.scheduler.base import Schedule
 from autotx.scheduler.status import (SCHED_STATUS_INITIALIZED,
                                      SCHED_STATUS_INITIALIZING,
@@ -49,6 +50,7 @@ class Scheduler(Schedule):
         self.__signBufferPool = None
         self.__broadcastBufferPool = None
         self.__stakingBufferPool = None
+        self.__distributionBufferPool = None
         self.__errorBufferPool = None
         self.__auth = None
         self.__node = 'tcp://172.38.8.89:26657'
@@ -110,6 +112,7 @@ class Scheduler(Schedule):
             self.sign(threading.currentThread())
             self.broadcast(threading.currentThread())
             self.staking(threading.currentThread())
+            self.distribution(threading.currentThread())
             print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('Scheduler has been started.'))
             return err
         finally:
@@ -134,6 +137,7 @@ class Scheduler(Schedule):
             self.__broadcastBufferPool.Close()
             self.__stakingBufferPool.Close()
             self.__errorBufferPool.Close()
+            self.__distributionBufferPool.Close()
             print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('Scheduler has been stopped.'))
             return err
         finally:
@@ -211,6 +215,15 @@ class Scheduler(Schedule):
             if ok is False:
                 continue
         print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('staking modules register successfully!'))
+        for distributor in modules.Distributors:
+            if distributor is None:
+                continue
+            ok, err = self.__registrar.Register(distributor)
+            if err is not None:
+                return err
+            if ok is False:
+                continue
+        print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('distribution modules register successfully!'))
 
     def __initBufferPool(self, poolArgs):
         # init banker buffer pool
@@ -233,6 +246,11 @@ class Scheduler(Schedule):
             self.__stakingBufferPool.Close()
         self.__stakingBufferPool = Pool(poolArgs.StakingBufCap, poolArgs.StakingMaxNumber)
         print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('staking buffer pool built by bufCap = %s and maxBufNumber = %s' % (poolArgs.StakingBufCap, poolArgs.StakingMaxNumber)))
+        # init distribution buffer pool
+        if self.__distributionBufferPool is not None and self.__distributionBufferPool.Closed() is False:
+            self.__distributionBufferPool.Close()
+        self.__distributionBufferPool = Pool(poolArgs.DistributionBufCap, poolArgs.DistributionMaxNumber)
+        print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('distribution buffer pool built by bufCap = %s and maxBufNumber = %s' % (poolArgs.DistributionBufCap, poolArgs.DistributionMaxNumber)))
         # init error buffer pool
         if self.__errorBufferPool is not None and self.__errorBufferPool.Closed() is False:
             self.__errorBufferPool.Close()
@@ -260,6 +278,10 @@ class Scheduler(Schedule):
             return CheckBufferPoolError('empty staking buffer pool')
         if self.__stakingBufferPool is not None and self.__stakingBufferPool.Closed():
             self.__stakingBufferPool = Pool(self.__stakingBufferPool.BufCap, self.__stakingBufferPool.MaxBufNumber)
+        if self.__distributionBufferPool is None:
+            return CheckBufferPoolError('empty distribution buffer pool')
+        if self.__distributionBufferPool is not None and self.__distributionBufferPool.Closed():
+            self.__distributionBufferPool = Pool(self.__distributionBufferPool.BufCap, self.__distributionBufferPool.MaxBufNumber)
 
     def randomTx(self, schedulerThread):
         def func():
@@ -268,11 +290,12 @@ class Scheduler(Schedule):
                 print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('scheduler thread %s is alive' % (schedulerThread.getName())))
                 accountList = list(self.__auth.GetAccountDict().values())
                 validatorList = list(self.__auth.GetValidatorDict().values())
-                if random.randint(0, 10) % 2 == 0:
-                    self.randomSendTx(accountList)
-                else:
-                    self.randomDelegateTx(accountList, validatorList)
-                time.sleep(random.randint(1, 600))
+                self.randomWithdrawDelegatorOneRewardTx(accountList, validatorList)
+                # if random.randint(0, 10) % 2 == 0:
+                #     self.randomSendTx(accountList)
+                # else:
+                #     self.randomDelegateTx(accountList, validatorList)
+                time.sleep(random.randint(1, 3))
         thread = threading.Thread(target=func)
         thread.name = 'randomTx'
         thread.start()
@@ -424,6 +447,47 @@ class Scheduler(Schedule):
         if err is not None:
             sendError(err, stakinger.ID(), self.__errorBufferPool)
 
+    def distribution(self, schedulerThread):
+        def func():
+            while True:
+                print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('current threading is %s' % (threading.currentThread())))
+                print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('scheduler thread %s is alive' % (schedulerThread.getName())))
+                distributionData, err = self.__distributionBufferPool.Get()
+                if err is not None:
+                    print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('the distribution pool is closed, break'))
+                    break
+                # include withdrawDelegatorOneReward, withdrawDelegatorAllReward
+                if distributionData and distributionData.getType() == 'withdrawDelegatorOneReward':
+                    self.withdrawDelegatorOneReward(distributionData.getData())
+        thread = threading.Thread(target=func)
+        thread.name = 'distribution'
+        thread.start()
+
+    def withdrawDelegatorOneReward(self, withdrawRewardData):
+        if withdrawRewardData is None or isinstance(withdrawRewardData, WithdrawDelegatorOneRewardArgs) is False or withdrawRewardData.Check() is not None:
+            return
+        distributor, err = self.__registrar.Get(TYPE_DISTRIBUTION)
+        if distributor is None or err is not None:
+            errMsg = 'could not get a distributor: %s' % (err)
+            sendError(TxerError(ERROR_DISTRIBUTION, errMsg), '', self.__errorBufferPool)
+            distributionArgs = DistributionArgs('withdrawDelegatorOneReward', withdrawRewardData)
+            sendDistribution(distributionArgs)
+            return
+        ok = isinstance(distributor, Distributor)
+        if ok is False:
+            errMsg = 'incorrect distributor type: ID: %s' % (distributor.ID())
+            sendError(TxerError(ERROR_DISTRIBUTION, errMsg), distributor.ID(), self.__errorBufferPool)
+            distributionArgs = DistributionArgs('withdrawDelegatorOneReward', withdrawRewardData)
+            sendDistribution(distributionArgs)
+            return
+        distributionTxJsonFilePath, err = distributor.WithdrawDelegatorOneReward(withdrawRewardData.delegator, withdrawRewardData.validator, withdrawRewardData.fees, withdrawRewardData.gas, withdrawRewardData.gasAdjust)
+        if distributionTxJsonFilePath is not None:
+            sendSignData = SendSignArgs(withdrawRewardData.delegator, distributionTxJsonFilePath, self.__node)
+            sendSign(sendSignData, self.__signBufferPool)
+        if err is not None:
+            print(err)
+            sendError(err, distributor.ID(), self.__errorBufferPool)
+
     def randomSendTx(self, accountList):
         length = len(accountList)
         if length == 0:
@@ -474,6 +538,30 @@ class Scheduler(Schedule):
         stakingArgs = StakingArgs('delegate', delegateTx)
         sendStaking(stakingArgs, self.__stakingBufferPool)
 
+    def randomWithdrawDelegatorOneRewardTx(self, delegatorList, validatorList):
+        length0 = len(delegatorList)
+        length1 = len(validatorList)
+        if length0 == 0 or length1 == 0:
+            return
+        random0 = random.randint(0, length0-1)
+        random1 = random.randint(0, length1-1)
+        delegator = delegatorList[random0]
+        validator = validatorList[random1]
+        if delegator is None:
+            return
+        if validator is None:
+            return
+        fees = [{'denom': 'hsn', 'amount': str(random.randint(1, 10))}]
+        gasList = ['100000', '200000', '150000']
+        randomGas = random.randint(0, 2)
+        gas = gasList[randomGas]
+        gasAdjustList = ['1.0', '1.1', '1.2', '1.3', '1.4', '1.5']
+        randomGasAdjust = random.randint(0, 5)
+        gasAdjust = gasAdjustList[randomGasAdjust]
+        withdrawDelegatorOneRewardArgs = WithdrawDelegatorOneRewardArgs(delegator, validator, fees, gas, gasAdjust)
+        distributionArgs = DistributionArgs('withdrawDelegatorOneReward', withdrawDelegatorOneRewardArgs)
+        sendDistribution(distributionArgs, self.__distributionBufferPool)
+
 
 def saveTxRecord(srcAccount, body):
     def func(srcAccount, body):
@@ -491,7 +579,7 @@ def saveTxRecord(srcAccount, body):
                     break
                 else:
                     delay += 1
-                    print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('checkTx recycle : %s' % (err.message)))
+                    print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('checkTx recycle : %s' % (err.msg)))
     thread = threading.Thread(target=func(srcAccount, body))
     thread.start()
 
@@ -541,6 +629,19 @@ def sendStaking(body, stakingBufferPool):
         err = stakingBufferPool.Put(body)
         if err is not None:
             print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('the delegate pool was closed'))
+
+    thread = threading.Thread(target=func(body))
+    thread.start()
+
+
+def sendDistribution(body, distributionBufferPool):
+    if body is None or distributionBufferPool is None or distributionBufferPool.Closed():
+        return False
+
+    def func(body):
+        err = distributionBufferPool.Put(body)
+        if err is not None:
+            print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('the distribution pool was closed'))
 
     thread = threading.Thread(target=func(body))
     thread.start()
@@ -608,31 +709,31 @@ def sendError(err, mid, errBufPool):
 
 class ModulesCheckError(Exception):
     def __init__(self, msg):
-        self.message = msg
+        self.msg = msg
 
     def __str__(self):
-        return self.message
+        return self.msg
 
 
 class CheckBufferPoolError(Exception):
     def __init__(self, msg):
-        self.message = msg
+        self.msg = msg
 
     def __str__(self):
-        return self.message
+        return self.msg
 
 
 class ParseError(Exception):
     def __init__(self, msg):
-        self.message = msg
+        self.msg = msg
 
     def __str__(self):
-        return self.message
+        return self.msg
 
 
 class CheckTxError(Exception):
     def __init__(self, msg):
-        self.message = msg
+        self.msg = msg
 
     def __str__(self):
-        return self.message
+        return self.msg

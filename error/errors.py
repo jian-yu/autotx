@@ -3,6 +3,7 @@ ERROR_SIGNER = 'signer error'
 ERROR_BROADCASTER = 'broadcaster error'
 ERROR_SCHEDULER = 'scheduler error'
 ERROR_STAKINGER = 'stakinger error'
+ERROR_DISTRIBUTION = 'distribution error'
 
 
 class TxerError:
@@ -32,39 +33,39 @@ class TxerError:
 
 class IllegalError(Exception):
     def __init__(self, msg):
-        self.message = msg
+        self.msg = msg
 
     def __str__(self):
-        return self.message
+        return self.msg
 
 
 class EmptyError(Exception):
     def __init__(self, msg):
-        self.message = 'dst is empty'
+        self.msg = 'dst is empty'
 
     def __str__(self):
-        return self.message
+        return self.msg
 
 
 class AccountNotFoundError(Exception):
     def __init__(self, name):
-        self.message = 'account %s is not found' % (name)
+        self.msg = 'account %s is not found' % (name)
 
     def __str__(self):
-        return self.message
+        return self.msg
 
 
 class AccountParseError(Exception):
     def __init__(self, msg):
-        self.message = msg
+        self.msg = msg
 
     def __str__(self):
-        return self.message
+        return self.msg
 
 
 class UnknownError(Exception):
     def __init__(self):
-        self.message = 'unknown error'
+        self.msg = 'unknown error'
 
     def __str__(self):
-        return self.message
+        return self.msg

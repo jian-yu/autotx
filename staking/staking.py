@@ -134,10 +134,10 @@ def postDelegate(body, delegatorAddr):
 
 class DelegatorError(Exception):
     def __init__(self, msg):
-        self.message = msg
+        self.msg = msg
 
     def Error(self):
-        return self.message
+        return self.msg
 
     def __str__(self):
-        return self.message
+        return self.msg

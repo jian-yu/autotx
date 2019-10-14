@@ -49,15 +49,15 @@ def sign(account, unSignTxJsonPath, node):
 
 class SignerError(Exception):
     def __init__(self, msg):
-        self.__message = msg
+        self.msg = msg
 
     def __str__(self):
-        return self.__message
+        return self.msg
 
 
 class ParseError(Exception):
     def __init__(self, msg):
-        self.__message = msg
+        self.msg = msg
 
     def __str__(self):
-        return self.__message
+        return self.msg
