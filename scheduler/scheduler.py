@@ -290,12 +290,14 @@ class Scheduler(Schedule):
                 print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('scheduler thread %s is alive' % (schedulerThread.getName())))
                 accountList = list(self.__auth.GetAccountDict().values())
                 validatorList = list(self.__auth.GetValidatorDict().values())
-                self.randomWithdrawDelegatorOneRewardTx(accountList, validatorList)
-                # if random.randint(0, 10) % 2 == 0:
-                #     self.randomSendTx(accountList)
-                # else:
-                #     self.randomDelegateTx(accountList, validatorList)
-                time.sleep(random.randint(1, 3))
+                seed = random.randint(0, 10)
+                if seed % 2 == 0:
+                    self.randomSendTx(accountList)
+                elif seed % 3 == 0:
+                    self.randomWithdrawDelegatorOneRewardTx(accountList, validatorList)
+                else:
+                    self.randomDelegateTx(accountList, validatorList)
+                time.sleep(random.randint(1, 60))
         thread = threading.Thread(target=func)
         thread.name = 'randomTx'
         thread.start()
