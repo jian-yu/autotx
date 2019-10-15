@@ -30,13 +30,12 @@ from autotx.scheduler.status import (SCHED_STATUS_INITIALIZED,
                                      SCHED_STATUS_UNINITIALIZED, CheckStatus)
 from autotx.sign.sign import Signer
 from autotx.staking.staking import Stakinger
-from autotx.utils.contants import HTTP_METHOD_GET, LOG_TIME_FOEMAT
+from autotx.utils.contants import HTTP_METHOD_GET, LOG_TIME_FOEMAT, TX_HASH_URL
 from autotx.utils.pool import Pool
 from autotx.utils.rwlock import RWLock
 from autotx.utils.timestamp import now_timestamp
 
 http = urllib3.PoolManager()
-TX_HASH_URL = 'http://172.38.8.89:1317/txs'
 
 
 # Scheduler: main to schedule register modules
@@ -594,7 +593,7 @@ def checkTx(body):
         return None, CheckTxError('checkTx: txhash is not found')
     try:
         print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Info('current tx hash is %s' % (tx['txhash'])))
-        resp = http.request(HTTP_METHOD_GET, TX_HASH_URL + '/' + tx['txhash'])
+        resp = http.request(HTTP_METHOD_GET, TX_HASH_URL % (tx['txhash']))
         if resp and resp.status == 200:
             if tx.get('logs') is not None and tx['logs'][0].get('success') is not None and (tx['logs'][0])['success'] is True:
                 return resp.data.decode('utf-8'), None

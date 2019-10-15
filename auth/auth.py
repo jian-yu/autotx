@@ -2,13 +2,12 @@ from autotx.module.module import Module
 from autotx.utils.rwlock import RWLock
 from autotx.auth.account import Account
 import urllib3
-from autotx.utils.contants import HTTP_METHOD_GET
+from autotx.utils.contants import HTTP_METHOD_GET, AUTH_ACCOUNT_URL
 import json
 from autotx.error.errors import AccountNotFoundError, AccountParseError, UnknownError
 from autotx import PROJECT_DIR
 
 http = urllib3.PoolManager()
-authAccountUrl = 'http://172.38.8.89:1317/auth/accounts/{accountAddr}'
 AUTH_LOG_FILE_PATH = PROJECT_DIR + '/auth/log/auth.log'
 
 
@@ -76,7 +75,7 @@ class Auth(Module):
         finally:
             self.DecrHandingCount()
             self.__rwLock.release()
-    
+
     def GetValidatorDict(self):
         self.IncrHandingCount()
         self.IncrCalledCount()
@@ -90,7 +89,7 @@ class Auth(Module):
 # 检查账户有效性
 def checkAccount(account):
     try:
-        resp = http.request(HTTP_METHOD_GET, authAccountUrl.format(accountAddr=account.getAddress()))
+        resp = http.request(HTTP_METHOD_GET, AUTH_ACCOUNT_URL % (account.getAddress()))
         if resp.status == 200:
             jsonData = json.loads(resp.data.decode('utf8'))
             if jsonData and dict(jsonData).get('result') and (dict(jsonData)['result']).get('value') and ((dict(jsonData)['result'])['value']).get('address') == '':

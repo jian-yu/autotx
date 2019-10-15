@@ -2,11 +2,10 @@ from autotx.broadcast.base import BroadCast
 from autotx.module.module import Module
 import json
 import urllib3
-from autotx.utils.contants import HTTP_METHOD_POST
+from autotx.utils.contants import HTTP_METHOD_POST, BROADCAST_TX_URL
 from autotx.utils.timestamp import now_timestamp
 
 http = urllib3.PoolManager()
-BROADCAST_TX_URL = 'http://172.38.8.89:1317/txs'
 
 
 class BroadCaster(Module, BroadCast):

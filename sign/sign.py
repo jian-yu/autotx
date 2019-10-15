@@ -1,12 +1,11 @@
 from autotx.sign.base import Sign
 from autotx.module.module import Module
 import pexpect
-from autotx import HSN_CLIENT_PATH, HSN_LOCAL_ACCOUNT_PATH
+from autotx import HSN_CLIENT_PATH, HSN_LOCAL_ACCOUNT_PATH, SIGN_TX_COMMAND
 from autotx.utils.timestamp import now_timestamp
 
 ERROR_INVALID_ACCOUNT_PASSWORD = 'ERROR: invalid account password'
 ERROR_ACCOUNT_PASSWORD_INSUFFICIENT_CHARACTERS = 'ERROR: Error reading passphrase: password must be at least 8 characters'
-SIGN_TX_COMMAND = '%s tx sign %s --from %s --node %s --home %s'
 
 
 class Signer(Module, Sign):

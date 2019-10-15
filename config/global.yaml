@@ -4,4 +4,6 @@ hsn_local_account_path: /home/xzjianyu/goproject/src/github.com/hyperspeednetwor
 chain_id: hsn
 unsign_dir: 
 broadcasted_tx_dir: 
-
+node_lcd_server: http://172.38.8.89:1317
+node_rpc_server: http://172.38.8.89:26657
+local_accounts_path: 

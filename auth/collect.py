@@ -4,20 +4,13 @@ import pexpect
 import urllib3
 import yaml
 
-from autotx import (HSN_CLIENT_PATH, HSN_LOCAL_ACCOUNT_PATH, PROJECT_CONFIG_DIR)
+from autotx import (HSN_CLIENT_PATH, HSN_LOCAL_ACCOUNT_PATH, ACCOUNT_CONFIG_PATH)
 from autotx.auth.account import Account
 from autotx.auth.validator import Validator
-from autotx.utils.contants import HTTP_METHOD_GET
+from autotx.utils.contants import HTTP_METHOD_GET, VALIDATOR_URL_SET, HSN_CLI_SHOW_ACCOUNT_COMMAND
 from autotx.bank.bank import QueryAccountInfo
 
-ACCOUNT_CONFIG_PATH = PROJECT_CONFIG_DIR + '/account.yaml'
-VALIDATOR_URL_SET = [
-    'http://172.38.8.89:1317/staking/validators?status=bonded',
-    "http://172.38.8.89:1317/staking/validators?status=unbonding",
-    'http://172.38.8.89:1317/staking/validators?status=unbonded'
-]
 http = urllib3.PoolManager()
-HSN_CLI_SHOW_ACCOUNT = '%s keys show %s --home %s'
 
 
 def CollectAccount():
@@ -44,7 +37,7 @@ def CollectAccount():
 
 def CollectAccountFromLocal(account):
     localAccountStr = pexpect.run(
-        HSN_CLI_SHOW_ACCOUNT %
+        HSN_CLI_SHOW_ACCOUNT_COMMAND %
         (HSN_CLIENT_PATH, account.getName(),
          HSN_LOCAL_ACCOUNT_PATH + '/' + account.getName()))
     localAccountDict = json.loads(localAccountStr)

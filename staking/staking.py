@@ -10,13 +10,11 @@ from autotx.module.module import Module
 from autotx.bank.bank import QueryAccountInfo
 from autotx.staking.base import Staking
 from autotx.staking.req import GenDelegateTxJson
-from autotx.utils.contants import HTTP_METHOD_GET, HTTP_METHOD_POST
+from autotx.utils.contants import HTTP_METHOD_GET, HTTP_METHOD_POST, DELEGATOR_DELEGATE_URL, DELEGATOR_UNBONDING_DELEGATE_URL
 from autotx.utils.file import WriteToFile
 from autotx.utils.timestamp import now_timestamp
 
 http = urllib3.PoolManager()
-DELEGATOR_DELEGATE_URL = 'http://172.38.8.89:1317/staking/delegators/%s/delegations'
-DELEGATOR_UNBONDING_DELEGATIONS_URL = 'http://172.38.8.89:1317/staking/delegators/%s/unbonding_delegations'
 
 
 class Stakinger(Module, Staking):
@@ -95,7 +93,7 @@ def GetAvailableBalance(delegator):
     try:
         resp = http.request(
             HTTP_METHOD_GET,
-            DELEGATOR_UNBONDING_DELEGATIONS_URL % (delegator.getAddress()))
+            DELEGATOR_UNBONDING_DELEGATE_URL % (delegator.getAddress()))
         if resp.status == 200:
             data = json.loads(resp.data.decode('utf-8'))
             unbondingDelegations = list(data['result'])

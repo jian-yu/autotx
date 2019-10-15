@@ -8,15 +8,13 @@ from autotx.bank.bank import QueryAccountInfo
 from autotx.common.baseReq import GenBaseReqJson
 from autotx.distribution.base import Distribute
 from autotx.module.module import Module
-from autotx.utils.contants import HTTP_METHOD_GET, HTTP_METHOD_POST
+from autotx.utils.contants import HTTP_METHOD_GET, HTTP_METHOD_POST, DELEGATOR_REWARD_URL
 from autotx.utils.file import WriteToFile
 from autotx.utils.timestamp import now_timestamp
 from autotx.distribution.req import GenWithdrawDelegatorOneRewardTxJson
 from decimal import Decimal
 
 http = urllib3.PoolManager()
-
-DELEGATOR_REWARD_URL = 'http://172.38.8.89:1317/distribution/delegators/%s/rewards/%s'
 
 
 class Distributor(Module, Distribute):

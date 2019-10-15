@@ -12,6 +12,11 @@ HSN_SERVER_PATH = ''
 HSN_LOCAL_ACCOUNT_PATH = ''
 HSN_CHAIN_ID = ''
 
+HSN_NODE_LCD_SERVER = ''
+HSN_NODE_RPC_SERVER = ''
+
+LOCAL_ACCOUNTS_PATH = PROJECT_CONFIG_DIR + '/account.yaml'
+
 config = {}
 
 
@@ -23,16 +28,16 @@ def init():
         if globalConfig.readable():
             global config
             config = yaml.load(globalConfig.read())
-            global HSN_CLIENT_PATH
-            global HSN_SERVER_PATH
-            global HSN_LOCAL_ACCOUNT_PATH
-            global HSN_CHAIN_ID
-            global HSN_UNSIGN_JSON_DIR
+            global HSN_CLIENT_PATH, HSN_SERVER_PATH, HSN_LOCAL_ACCOUNT_PATH, HSN_CHAIN_ID, HSN_UNSIGN_JSON_DIR, HSN_NODE_LCD_SERVER, HSN_NODE_RPC_SERVER, LOCAL_ACCOUNTS_PATH
             HSN_CLIENT_PATH = config['hsn_client_path']
             HSN_SERVER_PATH = config['hsn_server_path']
             HSN_LOCAL_ACCOUNT_PATH = config['hsn_local_account_path']
             HSN_CHAIN_ID = config['chain_id']
+            HSN_NODE_LCD_SERVER = config['node_lcd_server']
+            HSN_NODE_RPC_SERVER = config['node_rpc_server']
             initFileDir(config)
+            if config.get('local_accounts_path') is not None and config['local_accounts_path'] != '':
+                LOCAL_ACCOUNTS_PATH = config['local_accounts_path']
     finally:
         if globalConfig:
             globalConfig.close()

@@ -9,13 +9,10 @@ from autotx.utils.file import WriteToFile
 from autotx.bank.req import GenSendTxJson
 from autotx.common.baseReq import GenBaseReqJson
 from autotx.module.module import Module
-from autotx.utils.contants import HTTP_METHOD_GET, HTTP_METHOD_POST
+from autotx.utils.contants import HTTP_METHOD_GET, HTTP_METHOD_POST, ACCOUNT_BALANCE_URL, SEND_TX_URL, ACCOUNT_INFO_URL
 from autotx.utils.timestamp import now_timestamp
 
 http = urllib3.PoolManager()
-ACCOUNT_BALANCE_URL = 'http://172.38.8.89:1317/bank/balances/%s'
-SEND_TX_URL = 'http://172.38.8.89:1317/bank/accounts/%s/transfers'
-ACCOUNT_INFO_URL = 'http://172.38.8.89:1317/auth/accounts/%s'
 
 
 class Banker(Module, Bank):
