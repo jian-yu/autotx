@@ -1,7 +1,8 @@
 from autotx.sign.base import Sign
 from autotx.module.module import Module
 import pexpect
-from autotx import HSN_CLIENT_PATH, HSN_LOCAL_ACCOUNT_PATH, SIGN_TX_COMMAND
+from autotx import HSN_CLIENT_PATH, HSN_LOCAL_ACCOUNT_PATH
+from autotx.utils.contants import SIGN_TX_COMMAND
 from autotx.utils.timestamp import now_timestamp
 
 ERROR_INVALID_ACCOUNT_PASSWORD = 'ERROR: invalid account password'

@@ -7,8 +7,7 @@ from autotx.scheduler.args import ModuleArgs, PoolArgs
 from autotx.scheduler.scheduler import Scheduler
 from autotx.simple.module import GetBankers, GetBroadcasters, GetSigners, GetStakingers, GetDistributors
 from autotx.utils.contants import LOG_TIME_FOEMAT
-
-NODE = 'tcp://172.38.8.89:26657'
+from autotx import HSN_NODE_RPC_SERVER
 
 
 def main():
@@ -31,7 +30,7 @@ def main():
         print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('An error occurs when building distributor: %s' % (err)))
     moduleArgs = ModuleArgs(bankers, signers, broadcasters, stakingers, distributors)
 
-    err = scheduler.Init(moduleArgs, poolArgs, NODE)
+    err = scheduler.Init(moduleArgs, poolArgs, HSN_NODE_RPC_SERVER)
     if err is not None:
         print(Logger(time.strftime(LOG_TIME_FOEMAT, time.localtime())).Warn('An error occurs when initializing scheduler: %s' % (err)))
 

@@ -4,7 +4,7 @@ import pexpect
 import urllib3
 import yaml
 
-from autotx import (HSN_CLIENT_PATH, HSN_LOCAL_ACCOUNT_PATH, ACCOUNT_CONFIG_PATH)
+from autotx import (HSN_CLIENT_PATH, HSN_LOCAL_ACCOUNT_PATH, LOCAL_ACCOUNTS_PATH)
 from autotx.auth.account import Account
 from autotx.auth.validator import Validator
 from autotx.utils.contants import HTTP_METHOD_GET, VALIDATOR_URL_SET, HSN_CLI_SHOW_ACCOUNT_COMMAND
@@ -15,7 +15,7 @@ http = urllib3.PoolManager()
 
 def CollectAccount():
     accountList = []
-    accountConfigFile = open(ACCOUNT_CONFIG_PATH, 'r', encoding='utf-8')
+    accountConfigFile = open(LOCAL_ACCOUNTS_PATH, 'r', encoding='utf-8')
     try:
         if accountConfigFile.readable():
             localAccountList = yaml.load(accountConfigFile.read())
