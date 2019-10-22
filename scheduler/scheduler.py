@@ -290,12 +290,12 @@ class Scheduler(Schedule):
                 accountList = list(self.__auth.GetAccountDict().values())
                 validatorList = list(self.__auth.GetValidatorDict().values())
                 seed = random.randint(0, 10)
-                # if seed % 2 == 0:
-                #     self.randomSendTx(accountList)
-                # elif seed % 3 == 0:
-                self.randomWithdrawDelegatorOneRewardTx(accountList, validatorList)
-                # else:
-                #     self.randomDelegateTx(accountList, validatorList)
+                if seed % 2 == 0:
+                    self.randomSendTx(accountList)
+                elif seed % 3 == 0:
+                    self.randomWithdrawDelegatorOneRewardTx(accountList, validatorList)
+                else:
+                    self.randomDelegateTx(accountList, validatorList)
                 time.sleep(random.randint(1, 10))
         thread = threading.Thread(target=func)
         thread.name = 'randomTx'
