@@ -5,6 +5,6 @@ protobuf==3.0.0
 pyflakes==2.1.1
 pytest==5.0.1
 python-dateutil==2.6.1
-PyYAML==5.1
+PyYAML==3.12
 requests==2.18.4
 urllib3==1.25.5
