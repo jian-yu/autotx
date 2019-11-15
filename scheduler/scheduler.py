@@ -503,7 +503,7 @@ class Scheduler(Schedule):
             return
         if dstAccount is None:
             return
-        sendCoins = [{'denom': 'hsn', 'amount': str(random.randint(0, 50000))}]
+        sendCoins = [{'denom': 'hsn', 'amount': str(random.randint(0, 100))}]
         fees = [{'denom': 'hsn', 'amount': str(random.randint(1, 10))}]
         gasList = ['100000', '200000', '150000']
         randomGas = random.randint(0, 2)
@@ -527,7 +527,7 @@ class Scheduler(Schedule):
             return
         if validator is None:
             return
-        delegateCoin = {'denom': 'hsn', 'amount': str(random.randint(0, 1000))}
+        delegateCoin = {'denom': 'hsn', 'amount': str(random.randint(0, 10))}
         fees = [{'denom': 'hsn', 'amount': str(random.randint(1, 10))}]
         gasList = ['100000', '200000', '150000']
         randomGas = random.randint(0, 2)
